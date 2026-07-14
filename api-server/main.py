@@ -17,10 +17,14 @@ import os
 from contextlib import asynccontextmanager
 
 
+
+
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -35,12 +39,16 @@ from middleware.input_validation import InputValidationMiddleware
 from middleware.rate_limit import RateLimitExceeded, SlowAPIMiddleware, _rate_limit_exceeded_handler, limiter
 
 
+
+
 # ── Enterprise Security Middlewares (v18) ─────────────────────────────────────
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.tenant import TenantMiddleware
 from middleware.trace_id import TraceIDMiddleware
 from models.database import engine
 from preflight_secrets import check_secrets as _preflight_check_secrets
+
+
 
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -61,13 +69,11 @@ structlog.configure(
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 
 
+
+
 # MED-7 FIX: PII Redactor ne doit jamais échouer silencieusement en production.
 # AVANT: un bug dans pii_redactor.py faisait continuer le serveur en loggant des PII
 # (noms, emails, numéros de téléphone clients) — violation RGPD potentielle sans alerte.
 # CORRIGÉ: fail hard en production si le redactor ne peut pas s'installer.
 # En développement: avertissement visible, mais on continue (DX prioritaire).
 _pii_env = settings.ENV.lower()
-try:
-    from services.pii_redactor import install_pii_redactor
-    install_pii_redactor()
-except Exception as _pii_exc:  # noqa: BLE001
