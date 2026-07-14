@@ -19,10 +19,18 @@ from contextlib import asynccontextmanager
 
 
 
+
+
+
+
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+
+
+
 
 
 
@@ -41,12 +49,20 @@ from middleware.rate_limit import RateLimitExceeded, SlowAPIMiddleware, _rate_li
 
 
 
+
+
+
+
 # ── Enterprise Security Middlewares (v18) ─────────────────────────────────────
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.tenant import TenantMiddleware
 from middleware.trace_id import TraceIDMiddleware
 from models.database import engine
 from preflight_secrets import check_secrets as _preflight_check_secrets
+
+
+
+
 
 
 
@@ -67,13 +83,3 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
-
-
-
-
-# MED-7 FIX: PII Redactor ne doit jamais échouer silencieusement en production.
-# AVANT: un bug dans pii_redactor.py faisait continuer le serveur en loggant des PII
-# (noms, emails, numéros de téléphone clients) — violation RGPD potentielle sans alerte.
-# CORRIGÉ: fail hard en production si le redactor ne peut pas s'installer.
-# En développement: avertissement visible, mais on continue (DX prioritaire).
-_pii_env = settings.ENV.lower()
